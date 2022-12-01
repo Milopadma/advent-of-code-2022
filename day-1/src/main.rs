@@ -38,5 +38,25 @@ fn main() {
     for i in 1..input_integers_2.len() {
         input_integers_3.push(("elf-".to_string() + &i.to_string(), input_integers_2[i].clone()));
     }
-    println!("{:?}", input_integers_3);
+    // println!("{:?}", input_integers_3);
+
+    // now time to find the elf with the most calories
+    let mut mostcalories = findMostCalories(input_integers_3);
+    println!("The elf with the most calories is: {:?}", mostcalories);
+}
+
+fn findMostCalories(input: Vec<(String, Vec<i32>)>) -> (String, i32) {
+    let mut most_calories = 0;
+    let mut most_calories_elf = String::new();
+    for i in &input {
+        let mut calories = 0;
+        for j in &i.1 {
+            calories += j;
+        }
+        if calories > most_calories {
+            most_calories = calories;
+            most_calories_elf = i.0.clone();
+        }
+    }
+    (most_calories_elf, most_calories)
 }
