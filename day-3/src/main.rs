@@ -1,5 +1,6 @@
 // AOC2022 day 3 THE RUCKSACK PROBLEM
 fn main() {
+    let mut is_part_2 = true;
     let mut total_all = 0;
     // Read the input file
     let input = std::fs::read_to_string("input.txt").expect("Error reading input file");
@@ -7,20 +8,71 @@ fn main() {
     let splitted_lines_array: Vec<&str> = input.lines().collect();
     // print!("{:?}", lines)
     // for each string in the splitted_lines_array, divide the string into two strings
-    for entries in splitted_lines_array {
-        // get the length of the string first
-        let length = entries.len();
-        let divide_by = length / 2;
-        // split the string into two strings
-        let (first, second) = entries.split_at(divide_by);
-        // print the first and second strings
-        println!("first: {}, second: {}", first, second);
-        // now do the iteration
-        total_all += part1_iteration(first, second);
+    if !is_part_2 {
+        for entries in splitted_lines_array {
+            // get the length of the string first
+            let length = entries.len();
+            let divide_by = length / 2;
+            // split the string into two strings
+            let (first, second) = entries.split_at(divide_by);
+            // print the first and second strings
+            // println!("first: {}, second: {}", first, second);
+            // now do the iteration
+            total_all += part1_iteration(first, second);
+        }
+    } else {
+        // in part 2's case, every set of three lines corresponds to a single group
+        // so we need to iterate through the lines in groups of three
+        let mut i = 0;
+        while i < splitted_lines_array.len() {
+            // get the entries in index i
+            let first_in_group = splitted_lines_array[i];
+            // get the entries in index i + 1
+            let second_in_group = splitted_lines_array[i + 1];
+            // get the entries in index i + 2
+            let third_in_group = splitted_lines_array[i + 2];
+            // make a new vector based off of the three entries
+            let new_vector = vec![first_in_group, second_in_group, third_in_group];
+            // print this
+            println!("{:?}", new_vector);
+            // now do the iteration
+            total_all += part2_iteration(first_in_group, second_in_group, third_in_group);
+            // increment i by 3
+            i += 3;
+        }
     }
 
     // wen done, print the total
     println!("total: {}", total_all);
+}
+
+fn part2_iteration(first_in_group: &str, second_in_group: &str, third_in_group: &str) -> i32 {
+    let mut count = 0;
+    let mut is_found = false;
+    // get the length of the string first
+    for first_in_group_char in first_in_group.chars() {
+        for second_in_group_char in second_in_group.chars() {
+            for third_in_group_char in third_in_group.chars() {
+                if
+                    first_in_group_char == second_in_group_char &&
+                    second_in_group_char == third_in_group_char
+                {
+                    // check the character based off of the priority point check
+                    let priority_point = part1_check_priority(&first_in_group_char);
+                    count += priority_point;
+                    is_found = true;
+                    break;
+                }
+            }
+            if is_found {
+                break;
+            }
+        }
+        if is_found {
+            break;
+        }
+    }
+    return count;
 }
 
 fn part1_iteration(first: &str, second: &str) -> i32 {
@@ -37,12 +89,12 @@ fn part1_iteration(first: &str, second: &str) -> i32 {
                     let priority_point = part1_check_priority(&first_chars);
                     // if the characters are the same, then we increment the count
                     count += priority_point;
-                    println!(
-                        "first_chars: {}, second_chars: {}, priority_point: {}",
-                        first_chars,
-                        second_chars,
-                        priority_point
-                    );
+                    // println!(
+                    //     "first_chars: {}, second_chars: {}, priority_point: {}",
+                    //     first_chars,
+                    //     second_chars,
+                    //     priority_point
+                    // );
                     // set the flag to true
                     is_found = true;
                     // if one is found already, just break it to move onto the next string
