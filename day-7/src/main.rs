@@ -82,7 +82,10 @@ fn sumTotalofDirs(file_vec: &[File], arg: i32) -> i32 {
         // pretty print my dirVec
         // println!("{:?}", dirVec);
     }
-    // stage 2: find the total size of directories with a total size of 100000, and summed of their total sizes
+    // stage 2: reiterate through dirVec and create a new Vector of just 
+
+
+    // stage 3: find the total size of directories with a total size of 100000, and summed of their total sizes
     for x in 0..dirVec.len() {
         if dirVec[x].size <= arg {
             sumOfDir100ksize += dirVec[x].size;
@@ -140,10 +143,16 @@ fn fileFinder<'a>(splitted_input: &'a Vec<&'a str>) -> Vec<File> {
                 {
                     // if it is, we need to remove the last directory from the currentDir
                     let mut temp2: Vec<&str> = currentDir.split("/").collect();
-                    // remove the last element
-                    temp2.pop();
-                    // rejoin the vector into a string
-                    currentDir = temp2.join("/");
+                    println!("{:?}", temp2);
+                    // check if the first element of temp2 vector is a / before attempting to pop, as there should always be a / at the start of the string
+                    if temp2.len() == 1 {
+                        // do literally nothing and move on
+                    } else {
+                        // remove the last element
+                        temp2.pop();
+                        // rejoin the vector into a string
+                        currentDir = temp2.join("/");
+                    }
                 } else {
                     // if its not a .., we just need to concat the new directory to the currentDir
                     currentDir = currentDir.to_string() + "/" + &temp[2].to_string();
