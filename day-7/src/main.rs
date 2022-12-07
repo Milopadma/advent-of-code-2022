@@ -47,11 +47,7 @@ fn fileFinder<'a>(splitted_input: &'a Vec<&'a str>) -> Vec<File> {
     // loop through every element in the vector
     for x in splitted_input {
         // early returns to weed out non-files
-        if
-            x.contains("ls") ||
-            x.contains("dir") ||
-            x.contains("..")
-        {
+        if x.contains("ls") || x.contains("dir") {
             //println
             println!("skipping: {}", x);
             // move to the next x
@@ -69,7 +65,23 @@ fn fileFinder<'a>(splitted_input: &'a Vec<&'a str>) -> Vec<File> {
         if x.contains("$ cd") {
             // this means we moved into a new directory and need to update the currentDir, by taking it from the string
             let mut temp: Vec<&str> = x.split(" ").collect();
-            currentDir = temp[2].to_string();
+            // check if its a /
+            if temp[2] == "/" {
+                // if it is, we need to set the currentDir to /
+                currentDir = "/".to_string();
+            }
+            // check if its a ..
+            if temp[2] == ".." {
+                // if it is, we need to remove the last directory from the currentDir
+                let mut temp2: Vec<&str> = currentDir.split("/").collect();
+                // remove the last element
+                temp2.pop();
+                // rejoin the vector into a string
+                currentDir = temp2.join("/");
+            } else {
+                // if its not a .., we just need to concat the new directory to the currentDir
+                currentDir = currentDir.to_string() + "/" + &temp[2].to_string();
+            }
             //println
             println!("currentDir: {}", currentDir);
         }
