@@ -43,23 +43,40 @@ fn main() {
     println!("Sum of directories with a size of 100000: {}", sumOfDir100ksize);
 }
 
-fn sumTotalofDirs(file_vec: &[File], arg: i32) -> i32 {
-    // iterate over all the files in the vector, to find all of the directories with a total size of at most 100000. Then sum up their total sizes of those directories.
+fn sumTotalofDirs(file_vec: &Vec<File>, arg: i32) -> i32 {
+    // total to be returned
     let mut sumOfDir100ksize: i32 = 0;
 
-    // new vector of Dir structs
+    let dirVecRaw: Vec<Dir> = directoryVectorRaw(file_vec);
+
+    let dirVecVerbose = directoryVectorVerbose(&dirVecRaw);
+
+    // stage 3: find the total size of directories with a total size of 100000, and summed of their total sizes
+    for x in 0..dirVecVerbose.len() {
+        // println!("{}: {}", dirVec[x].dir, dirVec[x].size);
+        if dirVecVerbose[x].size < arg {
+            sumOfDir100ksize += dirVecVerbose[x].size;
+        }
+    }
+
+    // then finally
+    return sumOfDir100ksize;
+}
+
+fn directoryVectorRaw(file_vec: &Vec<File>) -> Vec<Dir> {
+    // new vector of Dir structs, this holds the directories and their sizes
     let mut dirVec: Vec<Dir> = Vec::new();
 
-    // comparing n with n+1
-    for x in 0..file_vec.len() - 1 {
+    for x in 0..file_vec.len() {
         // find out if this filedir exists in dirVec as an entry already
-        let mut dirVecContainsDir: bool = doesThisExistInDicVer(&dirVec, &file_vec[x].filedir);
+        let mut dirVecContainsDir: bool = isExistInVec(&dirVec, &file_vec[x].filedir);
+
         // in the case the directory is already in the vector, we need to add the filesize to the size of the directory
         if dirVecContainsDir {
             // find the index of the directory in the vector
             let mut index: usize = 0;
             for y in 0..dirVec.len() {
-                if dirVec[y].dir == file_vec[x].filedir {
+                if *dirVec[y].dir == file_vec[x].filedir {
                     index = y;
                 }
             }
@@ -71,6 +88,7 @@ fn sumTotalofDirs(file_vec: &[File], arg: i32) -> i32 {
                 dir: String::new(),
                 size: 0,
             };
+
             // set the dir to the filedir
             aSingularDir.dir = file_vec[x].filedir.to_string();
             // set the size to the filesize
@@ -80,25 +98,59 @@ fn sumTotalofDirs(file_vec: &[File], arg: i32) -> i32 {
         }
 
         // pretty print my dirVec
-        // println!("{:?}", dirVec);
+        println!("{:?}", dirVec);
     }
-    // stage 2: reiterate through dirVec and create a new Vector of just 
-
-
-    // stage 3: find the total size of directories with a total size of 100000, and summed of their total sizes
-    for x in 0..dirVec.len() {
-        if dirVec[x].size <= arg {
-            sumOfDir100ksize += dirVec[x].size;
-        }
-    }
-
-    // then finally
-    return sumOfDir100ksize;
+    return dirVec;
 }
 
-fn doesThisExistInDicVer(dirVec: &[Dir], filedir: &str) -> bool {
+fn directoryVectorVerbose(dirVec: &Vec<Dir>) -> Vec<Dir> {
+    // stage 2: reiterate through dirVec and create a new vector to actually count each directory's size
+    // new vector of Dir structs
+    let mut dirVecVerbose: Vec<Dir> = Vec::new();
+    for x in 0..dirVec.len() {
+        // split the dir string by /
+        let mut temp: Vec<&str> = dirVec[x].dir.split("/").collect();
+        for y in 0..temp.len() {
+            // find out if the first entry exists
+            let mut dirVecVerboseContainsDir: bool = isExistInVec(
+                &dirVecVerbose,
+                &temp[y].to_string()
+            );
+            // if it does, add the size to the size of the directory
+            if dirVecVerboseContainsDir {
+                // find the index of the directory in the vector
+                let mut index: usize = 0;
+                for z in 0..dirVecVerbose.len() {
+                    if dirVecVerbose[z].dir == temp[y].to_string() {
+                        index = z;
+                    }
+                }
+                // add the filesize to the size of the directory
+                dirVecVerbose[index].size += dirVec[x].size;
+            } else {
+                // init a new Dir struct instance
+                let mut aSingularDir = Dir {
+                    dir: String::new(),
+                    size: 0,
+                };
+                // set the dir to the filedir
+                aSingularDir.dir = temp[y].to_string();
+                // set the size to the filesize
+                aSingularDir.size = dirVec[x].size;
+                // add this singular dir to the vector of dirs
+                dirVecVerbose.push(aSingularDir);
+            }
+        }
+    }
+    // pretty print dirvecverbose
+    // println!("{:?}", dirVecVerbose);
+    dirVecVerbose
+}
+
+// function that checks if a string exists in a vector of Dir structs
+fn isExistInVec(dirVec: &Vec<Dir>, filedir: &str) -> bool {
     for y in 0..dirVec.len() {
-        if dirVec[y].dir.contains(filedir) {
+        if dirVec[y].dir == filedir.to_string() {
             return true;
         }
     }
@@ -131,31 +183,36 @@ fn fileFinder<'a>(splitted_input: &'a Vec<&'a str>) -> Vec<File> {
 
             // if the string has "$ cd" in it
             if x.contains("$ cd") {
-                // this means we moved into a new directory and need to update the currentDir, by taking it from the string
-                let mut temp: Vec<&str> = x.split(" ").collect();
-                // check if its a /
-                if temp[2] == "/" {
-                    // if it is, we need to set the currentDir to /
-                    currentDir = "~".to_string();
-                } else if
-                    // check if its a ..
-                    temp[2] == ".."
-                {
-                    // if it is, we need to remove the last directory from the currentDir
-                    let mut temp2: Vec<&str> = currentDir.split("/").collect();
-                    println!("{:?}", temp2);
-                    // check if the first element of temp2 vector is a / before attempting to pop, as there should always be a / at the start of the string
-                    if temp2.len() == 1 {
-                        // do literally nothing and move on
-                    } else {
-                        // remove the last element
-                        temp2.pop();
-                        // rejoin the vector into a string
-                        currentDir = temp2.join("/");
-                    }
+                // check if this directory already exists in the vector of files
+                if currentDir == x.split(" ").collect::<Vec<&str>>()[2] {
+                    continue;
                 } else {
-                    // if its not a .., we just need to concat the new directory to the currentDir
-                    currentDir = currentDir.to_string() + "/" + &temp[2].to_string();
+                    // this means we moved into a new directory and need to update the currentDir, by taking it from the string
+                    let mut temp: Vec<&str> = x.split(" ").collect();
+                    // check if its a /
+                    if temp[2] == "/" {
+                        // if it is, we need to set the currentDir to /
+                        currentDir = "~".to_string();
+                    } else if
+                        // check if its a ..
+                        temp[2] == ".."
+                    {
+                        // if it is, we need to remove the last directory from the currentDir
+                        let mut temp2: Vec<&str> = currentDir.split("/").collect();
+                        // println!("{:?}", temp2);
+                        // check if the first element of temp2 vector is a / before attempting to pop, as there should always be a / at the start of the string
+                        if temp2.len() == 1 {
+                            // do literally nothing and move on
+                        } else {
+                            // remove the last element
+                            temp2.pop();
+                            // rejoin the vector into a string
+                            currentDir = temp2.join("/");
+                        }
+                    } else {
+                        // if its not a .., we just need to concat the new directory to the currentDir
+                        currentDir = currentDir.to_string() + "/" + &temp[2].to_string();
+                    }
                 }
             } else if
                 // if the string has a number in it
