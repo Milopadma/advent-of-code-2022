@@ -10,7 +10,7 @@
 #[derive(Debug)]
 struct Dir {
     dir: String,
-    size: i32,
+    dirsize: i32,
 }
 
 // a struct of filename, filesize, and filedir
@@ -22,40 +22,121 @@ struct File {
     filedir: String,
 }
 
+// import Tree and Node from std
+
 fn main() {
     // load up input.txt
     let rawInput = std::fs::read_to_string("input.txt").unwrap();
 
     // create a new vector where every \n indicates a new element
     let mut splittedInput: Vec<&str> = rawInput.split("\n").collect();
-
-    // println
     // println!("{:?}", splittedInput);
 
-    // stage 1: get all the Files and their sizes in a vector
+    // stage 1: get all the Files, their sizes, and directories they live in, in a vector
     let mut fileVec: Vec<File> = fileFinder(&splittedInput);
-    println!("{:?}", fileVec);
+    // println!("{:?}", fileVec);
 
-    // need to find the total size of directories with a total size of 100000, and summed of their total sizes
-    let mut sumOfDir100ksize: i32 = sumTotalofDirs(&fileVec, 100000);
+    // stage 2: reiterate through dirVec and create a new vector to actually count each directory's size
+    let dirVectorGPT: Vec<Dir> = directoryVectorGPT(&fileVec);
+    println!("{:?}", dirVectorGPT);
+
+    // stage 3: find the total size of directories with a total size of 100000, and summed of their total sizes
+    let sumOfDir100ksize: i32 = sumTotalofDirs(dirVectorGPT, 100000);
 
     // println
     println!("Sum of directories with a size of 100000: {}", sumOfDir100ksize);
 }
 
-fn sumTotalofDirs(file_vec: &Vec<File>, arg: i32) -> i32 {
+// combined by chat gpt
+fn directoryVectorGPT(file_vec: &Vec<File>) -> Vec<Dir> {
+    // new vector of Dir structs, this holds the directories and their sizes
+    let mut dirVec: Vec<Dir> = Vec::new();
+
+    // Iterate through each file in the file_vec vector
+    for x in 0..file_vec.len() {
+        // Split the filedir string by the '/' character
+        let mut temp: Vec<&str> = file_vec[x].filedir.split("/").collect();
+
+        // Iterate through each entry in the temp vector
+        for y in 0..temp.len() {
+            // find out if the current directory exists in dirVec
+            let mut vecContainsDir: bool = isExistInVec(&dirVec, &temp[y].to_string());
+
+            // If the directory exists in dirVec, add the filesize to the size of the directory
+            if vecContainsDir {
+                // Find the index of the directory in the dirVec vector
+                let mut index: usize = 0;
+                for z in 0..dirVec.len() {
+                    if dirVec[z].dir == temp[y].to_string() {
+                        index = z;
+                    }
+                }
+
+                // Add the filesize to the size of the directory
+                dirVec[index].dirsize += file_vec[x].filesize;
+            } else {
+                // Initialize a new Dir struct instance
+                let mut aSingularDir = Dir {
+                    dir: String::new(),
+                    dirsize: 0,
+                };
+
+                // Set the dir to set the dir field of the Dir struct to the current directory
+                aSingularDir.dir = temp[y].to_string();
+                // Set the size to the filesize
+                aSingularDir.dirsize = file_vec[x].filesize;
+                // Add this singular dir to the vector of dirs
+                dirVec.push(aSingularDir);
+            }
+
+            // now to propagate the size of the directory to the parent directory
+            // if the current directory is not the root directory
+            if y != 0 {
+                // find out if the parent directory exists in dirVec
+                let mut vecContainsDir: bool = isExistInVec(&dirVec, &temp[y - 1].to_string());
+
+                // If the directory exists in dirVec, add the filesize to the size of the directory
+                if vecContainsDir {
+                    // Find the index of the directory in the dirVec vector
+                    let mut index: usize = 0;
+                    for z in 0..dirVec.len() {
+                        if dirVec[z].dir == temp[y - 1].to_string() {
+                            index = z;
+                        }
+                    }
+
+                    // Add the filesize to the size of the directory
+                    dirVec[index].dirsize += file_vec[x].filesize;
+                } else {
+                    // Initialize a new Dir struct instance
+                    let mut aSingularDir = Dir {
+                        dir: String::new(),
+                        dirsize: 0,
+                    };
+
+                    // Set the dir to set the dir field of the Dir struct to the current directory
+                    aSingularDir.dir = temp[y - 1].to_string();
+                    // Set the size to the filesize
+                    aSingularDir.dirsize = file_vec[x].filesize;
+                    // Add this singular dir to the vector of dirs
+                    dirVec.push(aSingularDir);
+                }
+            }
+        }
+    }
+    // Return the completed vector of directories
+    return dirVec;
+}
+
+fn sumTotalofDirs(dirVecVerbose: Vec<Dir>, arg: i32) -> i32 {
     // total to be returned
     let mut sumOfDir100ksize: i32 = 0;
 
-    let dirVecRaw: Vec<Dir> = directoryVectorRaw(file_vec);
-
-    let dirVecVerbose = directoryVectorVerbose(&dirVecRaw);
-
-    // stage 3: find the total size of directories with a total size of 100000, and summed of their total sizes
     for x in 0..dirVecVerbose.len() {
         // println!("{}: {}", dirVec[x].dir, dirVec[x].size);
-        if dirVecVerbose[x].size < arg {
-            sumOfDir100ksize += dirVecVerbose[x].size;
+        if dirVecVerbose[x].dirsize <= arg {
+            println!("{}: {}", dirVecVerbose[x].dir, dirVecVerbose[x].dirsize);
+            sumOfDir100ksize += dirVecVerbose[x].dirsize;
         }
     }
 
@@ -63,89 +144,88 @@ fn sumTotalofDirs(file_vec: &Vec<File>, arg: i32) -> i32 {
     return sumOfDir100ksize;
 }
 
-fn directoryVectorRaw(file_vec: &Vec<File>) -> Vec<Dir> {
-    // new vector of Dir structs, this holds the directories and their sizes
-    let mut dirVec: Vec<Dir> = Vec::new();
+// fn directoryVectorRaw(file_vec: &Vec<File>) -> Vec<Dir> {
+//     // new vector of Dir structs, this holds the directories and their sizes
+//     let mut dirVec: Vec<Dir> = Vec::new();
 
-    for x in 0..file_vec.len() {
-        // find out if this filedir exists in dirVec as an entry already
-        let mut dirVecContainsDir: bool = isExistInVec(&dirVec, &file_vec[x].filedir);
+//     for x in 0..file_vec.len() {
+//         // find out if this filedir exists in dirVec as an entry already
+//         let mut dirVecContainsDir: bool = isExistInVec(&dirVec, &file_vec[x].filedir);
 
-        // in the case the directory is already in the vector, we need to add the filesize to the size of the directory
-        if dirVecContainsDir {
-            // find the index of the directory in the vector
-            let mut index: usize = 0;
-            for y in 0..dirVec.len() {
-                if *dirVec[y].dir == file_vec[x].filedir {
-                    index = y;
-                }
-            }
-            // add the filesize to the size of the directory
-            dirVec[index].size += file_vec[x].filesize;
-        } else {
-            // init a new Dir struct instance
-            let mut aSingularDir = Dir {
-                dir: String::new(),
-                size: 0,
-            };
+//         // in the case the directory is already in the vector, we need to add the filesize to the size of the directory
+//         if dirVecContainsDir {
+//             // find the index of the directory in the vector
+//             let mut index: usize = 0;
+//             for y in 0..dirVec.len() {
+//                 if *dirVec[y].dir == file_vec[x].filedir {
+//                     index = y;
+//                 }
+//             }
+//             // add the filesize to the size of the directory
+//             dirVec[index].size += file_vec[x].filesize;
+//         } else {
+//             // init a new Dir struct instance
+//             let mut aSingularDir = Dir {
+//                 dir: String::new(),
+//                 size: 0,
+//             };
 
-            // set the dir to the filedir
-            aSingularDir.dir = file_vec[x].filedir.to_string();
-            // set the size to the filesize
-            aSingularDir.size = file_vec[x].filesize;
-            // add this singular dir to the vector of dirs
-            dirVec.push(aSingularDir);
-        }
+//             // set the dir to the filedir
+//             aSingularDir.dir = file_vec[x].filedir.to_string();
+//             // set the size to the filesize
+//             aSingularDir.size = file_vec[x].filesize;
+//             // add this singular dir to the vector of dirs
+//             dirVec.push(aSingularDir);
+//         }
 
-        // pretty print my dirVec
-        println!("{:?}", dirVec);
-    }
-    return dirVec;
-}
+//         // pretty print my dirVec
+//         println!("{:?}", dirVec);
+//     }
+//     return dirVec;
+// }
 
-fn directoryVectorVerbose(dirVec: &Vec<Dir>) -> Vec<Dir> {
-    // stage 2: reiterate through dirVec and create a new vector to actually count each directory's size
-    // new vector of Dir structs
-    let mut dirVecVerbose: Vec<Dir> = Vec::new();
-    for x in 0..dirVec.len() {
-        // split the dir string by /
-        let mut temp: Vec<&str> = dirVec[x].dir.split("/").collect();
-        for y in 0..temp.len() {
-            // find out if the first entry exists
-            let mut dirVecVerboseContainsDir: bool = isExistInVec(
-                &dirVecVerbose,
-                &temp[y].to_string()
-            );
-            // if it does, add the size to the size of the directory
-            if dirVecVerboseContainsDir {
-                // find the index of the directory in the vector
-                let mut index: usize = 0;
-                for z in 0..dirVecVerbose.len() {
-                    if dirVecVerbose[z].dir == temp[y].to_string() {
-                        index = z;
-                    }
-                }
-                // add the filesize to the size of the directory
-                dirVecVerbose[index].size += dirVec[x].size;
-            } else {
-                // init a new Dir struct instance
-                let mut aSingularDir = Dir {
-                    dir: String::new(),
-                    size: 0,
-                };
-                // set the dir to the filedir
-                aSingularDir.dir = temp[y].to_string();
-                // set the size to the filesize
-                aSingularDir.size = dirVec[x].size;
-                // add this singular dir to the vector of dirs
-                dirVecVerbose.push(aSingularDir);
-            }
-        }
-    }
-    // pretty print dirvecverbose
-    // println!("{:?}", dirVecVerbose);
-    dirVecVerbose
-}
+// fn directoryVectorVerbose(dirVec: &Vec<Dir>) -> Vec<Dir> {
+//     // new vector of Dir structs
+//     let mut dirVecVerbose: Vec<Dir> = Vec::new();
+//     for x in 0..dirVec.len() {
+//         // split the dir string by /
+//         let mut temp: Vec<&str> = dirVec[x].dir.split("/").collect();
+//         for y in 0..temp.len() {
+//             // find out if the first entry exists
+//             let mut dirVecVerboseContainsDir: bool = isExistInVec(
+//                 &dirVecVerbose,
+//                 &temp[y].to_string()
+//             );
+//             // if it does, add the size to the size of the directory
+//             if dirVecVerboseContainsDir {
+//                 // find the index of the directory in the vector
+//                 let mut index: usize = 0;
+//                 for z in 0..dirVecVerbose.len() {
+//                     if dirVecVerbose[z].dir == temp[y].to_string() {
+//                         index = z;
+//                     }
+//                 }
+//                 // add the filesize to the size of the directory
+//                 dirVecVerbose[index].size += dirVec[x].size;
+//             } else {
+//                 // init a new Dir struct instance
+//                 let mut aSingularDir = Dir {
+//                     dir: String::new(),
+//                     size: 0,
+//                 };
+//                 // set the dir to the filedir
+//                 aSingularDir.dir = temp[y].to_string();
+//                 // set the size to the filesize
+//                 aSingularDir.size = dirVec[x].size;
+//                 // add this singular dir to the vector of dirs
+//                 dirVecVerbose.push(aSingularDir);
+//             }
+//         }
+//     }
+//     // pretty print dirvecverbose
+//     // println!("{:?}", dirVecVerbose);
+//     dirVecVerbose
+// }
 
 // function that checks if a string exists in a vector of Dir structs
 fn isExistInVec(dirVec: &Vec<Dir>, filedir: &str) -> bool {
