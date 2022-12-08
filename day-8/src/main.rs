@@ -126,10 +126,17 @@ fn main() {
     // we can now iterate over the vector and count the visible trees
     let mut visible_trees = 0;
     // find out how many trees are  on the edges of the grid
+    // there are 100 rows
     for row in 0..tree_heights.len() {
+        // go through each row
         for col in 0..tree_heights[row].len() {
-            // if the tree is on the edge, it's visible
-            if
+            // to avoid out of bounds errors, we need to check if the row and column are on the edge
+            if col > tree_heights.len() {
+                break;
+            } else if
+                // with 100 columns
+                // go through each column
+                // if the tree is on the edge, it's visible
                 row == 0 ||
                 row == tree_heights.len() - 1 ||
                 col == 0 ||
@@ -141,19 +148,27 @@ fn main() {
                 // we need to check the trees in the same row and column
                 // we can do this by iterating over the trees in the same row and column
                 // and checking if they are taller than the current tree
+                // if they are, the current tree is not visible
+                // if they are not, the current tree is visible
                 let mut visible = true;
-                for i in 0..tree_heights.len() {
+                // check the trees in the same row
+                for i in 0..tree_heights[row].len() {
                     if tree_heights[row][i] > tree_heights[row][col] {
                         visible = false;
-                        break;
                     }
                 }
-                if visible {
-                    for i in 0..tree_heights[row].len() {
-                        if tree_heights[i][col] > tree_heights[row][col] {
-                            visible = false;
-                            break;
-                        }
+                // check the trees in the same column
+                for i in 0..tree_heights.len() {
+                    if tree_heights[i][col] > tree_heights[row][col] {
+                        // when does this fail?
+                        println!(
+                            "{} {} {} {}",
+                            i,
+                            col,
+                            tree_heights[i][col],
+                            tree_heights[row][col]
+                        );
+                        visible = false;
                     }
                 }
                 if visible {
@@ -165,3 +180,4 @@ fn main() {
 
     println!("visible trees: {}", visible_trees);
 }
+// 1. 831, which is wrong
