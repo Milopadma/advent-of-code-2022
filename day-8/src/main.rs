@@ -159,15 +159,10 @@ fn main() {
                 }
                 // check the trees in the same column
                 for i in 0..tree_heights.len() {
+                    if col == 99 {
+                        break;
+                    }
                     if tree_heights[i][col] > tree_heights[row][col] {
-                        // when does this fail?
-                        println!(
-                            "{} {} {} {}",
-                            i,
-                            col,
-                            tree_heights[i][col],
-                            tree_heights[row][col]
-                        );
                         visible = false;
                     }
                 }
@@ -181,3 +176,4 @@ fn main() {
     println!("visible trees: {}", visible_trees);
 }
 // 1. 831, which is wrong
+// 2. 731, too low
