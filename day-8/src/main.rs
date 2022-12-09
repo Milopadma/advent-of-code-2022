@@ -74,7 +74,11 @@ fn main() {
                 .max_by_key(|x| x.north + x.south + x.east + x.west)
                 .unwrap().west
     );
-    println!("Scenic scores: {:?}", all_tree_scenic_score);
+    // to print each entry in the vector in a new line
+    for i in all_tree_scenic_score.tree_scenic_scores {
+        println!("{:?}", i);
+    }
+
     // 1. 2765952 is too high
     // 2. 1420978 is too high
     // 3. 145 is too low
@@ -114,64 +118,35 @@ fn count_scenic_score(tree: &Vec<Vec<u32>>) -> AllTreeScenicScores {
     // iterate through the matrix
     for row in 0..tree.len() {
         for column in 0..tree[row].len() {
-            let current_number = tree[row][column];
+            let coords = (row, column);
 
-            // Find the coordinates of the number in the matrix
-            let mut coords = (0, 0);
-            for i in 0..tree.len() {
-                for j in 0..tree[i].len() {
-                    if tree[i][j] == current_number {
-                        coords = (i, j);
-                        break;
-                    }
-                }
-            }
-
-            // Measure the viewing distance by looking up
+            // Measure the viewing distance by looking up, from the tree to the edge of the grid.
+            // check up
             for i in (0..coords.0).rev() {
-                if tree[i][coords.1] == current_number || tree[i][coords.1] < current_number {
+                if tree[row][i] == tree[row][column] || tree[row][i] > tree[row][column] {
+                    tree_scenic_score.north += 1;
                     break;
                 }
                 tree_scenic_score.north += 1;
             }
 
-            // then to the same for the other 3 cardinal directions
             // check down
-            for k in row + 1..tree.len() {
-                if tree[k][column] >= tree[row][column] {
+            for i in coords.0 + 1..tree.len() {
+                if tree[row][i] == tree[row][column] || tree[row][i] > tree[row][column] {
                     tree_scenic_score.south += 1;
                     break;
-                } else {
-                    tree_scenic_score.south += 1;
                 }
-            }
-
-            // check left
-            for k in 0..column {
-                if tree[row][k] >= tree[row][column] {
-                    tree_scenic_score.east += 1;
-                    break;
-                } else {
-                    tree_scenic_score.east += 1;
-                }
-            }
-
-            // check right
-            for k in column + 1..tree[row].len() {
-                if tree[row][k] >= tree[row][column] {
-                    tree_scenic_score.west += 1;
-                    break;
-                } else {
-                    tree_scenic_score.west += 1;
-                }
+                tree_scenic_score.south += 1;
             }
 
             tree_scenic_score.tree_height = tree[row][column];
 
             // add the total to the vector
             all_tree_scenic_scores.tree_scenic_scores.push(tree_scenic_score);
+
             // add the tree height
             all_tree_scenic_scores.tree_height.push(tree[row][column]);
+
             // and reset the tree_scenic_score
             tree_scenic_score = TreeScenicScore {
                 tree_height: 0,
