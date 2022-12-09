@@ -114,19 +114,21 @@ fn count_scenic_score(tree: &Vec<Vec<u32>>) -> AllTreeScenicScores {
                 if tree[row][i] >= tree[row][column] && tree[row][i] != tree[row][column] {
                     tree_scenic_score.north += 1;
                     break;
+                } else {
+                    tree_scenic_score.north += 1;
                 }
-                tree_scenic_score.north += 1;
             }
 
             // Measure the viewing distance by looking down, from the tree to the edge of the grid.
             // check down
-            // this isnt working properly 
+            // this isnt working properly
             for i in coords.0 + 1..tree.len() {
                 if tree[row][i] >= tree[row][column] && tree[row][i] != tree[row][column] {
                     tree_scenic_score.south += 1;
                     break;
+                } else {
+                    tree_scenic_score.south += 1;
                 }
-                tree_scenic_score.south += 1;
             }
 
             // Measure the viewing distance by looking left, from the tree to the edge of the grid.
@@ -135,8 +137,9 @@ fn count_scenic_score(tree: &Vec<Vec<u32>>) -> AllTreeScenicScores {
                 if tree[i][column] >= tree[row][column] && tree[i][column] != tree[row][column] {
                     tree_scenic_score.east += 1;
                     break;
+                } else {
+                    tree_scenic_score.east += 1;
                 }
-                tree_scenic_score.east += 1;
             }
 
             // Measure the viewing distance by looking right, from the tree to the edge of the grid.
@@ -145,8 +148,9 @@ fn count_scenic_score(tree: &Vec<Vec<u32>>) -> AllTreeScenicScores {
                 if tree[i][column] >= tree[row][column] && tree[i][column] != tree[row][column] {
                     tree_scenic_score.west += 1;
                     break;
+                } else {
+                    tree_scenic_score.west += 1;
                 }
-                tree_scenic_score.west += 1;
             }
 
             // add the tree height to the struct
