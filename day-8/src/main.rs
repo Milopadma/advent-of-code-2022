@@ -46,9 +46,10 @@ fn main() {
 
     // for part 2, need to count the "scenic score"
     let all_tree_scenic_score = count_scenic_score(&tree);
+
     // print out the vector after each element has been multiplied by its 4 cardinal directions
     println!(
-        "Scenic scores: {:?}",
+        "Part 2: Scenic scores multiplied: {:?}",
         all_tree_scenic_score.tree_scenic_scores
             .iter()
             .map(|x| x.north * x.south * x.east * x.west)
@@ -56,27 +57,17 @@ fn main() {
     );
 
     println!(
-        "Highest scenic score: {}",
+        "Part 2: Highest scenic score: {}",
         all_tree_scenic_score.tree_scenic_scores
             .iter()
-            .max_by_key(|x| x.north + x.south + x.east + x.west)
-            .unwrap().north +
-            all_tree_scenic_score.tree_scenic_scores
-                .iter()
-                .max_by_key(|x| x.north + x.south + x.east + x.west)
-                .unwrap().south +
-            all_tree_scenic_score.tree_scenic_scores
-                .iter()
-                .max_by_key(|x| x.north + x.south + x.east + x.west)
-                .unwrap().east +
-            all_tree_scenic_score.tree_scenic_scores
-                .iter()
-                .max_by_key(|x| x.north + x.south + x.east + x.west)
-                .unwrap().west
+            .map(|x| x.north * x.south * x.east * x.west)
+            .max()
+            .unwrap()
     );
+
     // to print each entry in the vector in a new line
     for i in all_tree_scenic_score.tree_scenic_scores {
-        println!("{:?}", i);
+        println!("Part 2: {:?}", i);
     }
 
     // 1. 2765952 is too high
@@ -95,7 +86,6 @@ struct TreeScenicScore {
 
 #[derive(Debug)]
 struct AllTreeScenicScores {
-    tree_height: Vec<u32>,
     tree_scenic_scores: Vec<TreeScenicScore>,
 }
 
@@ -111,7 +101,6 @@ fn count_scenic_score(tree: &Vec<Vec<u32>>) -> AllTreeScenicScores {
 
     // init new struct of AllTreeScenicScores
     let mut all_tree_scenic_scores = AllTreeScenicScores {
-        tree_height: Vec::new(),
         tree_scenic_scores: Vec::new(),
     };
 
@@ -119,33 +108,52 @@ fn count_scenic_score(tree: &Vec<Vec<u32>>) -> AllTreeScenicScores {
     for row in 0..tree.len() {
         for column in 0..tree[row].len() {
             let coords = (row, column);
-
             // Measure the viewing distance by looking up, from the tree to the edge of the grid.
             // check up
             for i in (0..coords.0).rev() {
-                if tree[row][i] == tree[row][column] || tree[row][i] > tree[row][column] {
+                if tree[row][i] >= tree[row][column] && tree[row][i] != tree[row][column] {
                     tree_scenic_score.north += 1;
                     break;
                 }
                 tree_scenic_score.north += 1;
             }
 
+            // Measure the viewing distance by looking down, from the tree to the edge of the grid.
             // check down
+            // this isnt working properly 
             for i in coords.0 + 1..tree.len() {
-                if tree[row][i] == tree[row][column] || tree[row][i] > tree[row][column] {
+                if tree[row][i] >= tree[row][column] && tree[row][i] != tree[row][column] {
                     tree_scenic_score.south += 1;
                     break;
                 }
                 tree_scenic_score.south += 1;
             }
 
+            // Measure the viewing distance by looking left, from the tree to the edge of the grid.
+            // check left
+            for i in (0..coords.1).rev() {
+                if tree[i][column] >= tree[row][column] && tree[i][column] != tree[row][column] {
+                    tree_scenic_score.east += 1;
+                    break;
+                }
+                tree_scenic_score.east += 1;
+            }
+
+            // Measure the viewing distance by looking right, from the tree to the edge of the grid.
+            // check right
+            for i in coords.1 + 1..tree[row].len() {
+                if tree[i][column] >= tree[row][column] && tree[i][column] != tree[row][column] {
+                    tree_scenic_score.west += 1;
+                    break;
+                }
+                tree_scenic_score.west += 1;
+            }
+
+            // add the tree height to the struct
             tree_scenic_score.tree_height = tree[row][column];
 
             // add the total to the vector
             all_tree_scenic_scores.tree_scenic_scores.push(tree_scenic_score);
-
-            // add the tree height
-            all_tree_scenic_scores.tree_height.push(tree[row][column]);
 
             // and reset the tree_scenic_score
             tree_scenic_score = TreeScenicScore {
