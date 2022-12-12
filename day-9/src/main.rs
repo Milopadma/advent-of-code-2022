@@ -13,7 +13,6 @@ fn main() {
     // 1. Objective: Count all the positions the tail visited at least once.
 
     // Part 1.
-
     // create a 2 dimensional array of 0s to simulate the grid
     let mut grid = [[0; 20]; 20];
     for row in &grid {
@@ -21,8 +20,8 @@ fn main() {
     }
 
     // the start of the Head H and Tail T is at the center of the grid
-    let mut head = (10, 10);
-    let mut tail = (10, 10);
+    let mut head:(isize, isize) = (10, 10);
+    let mut tail:(isize, isize) = (10, 10);
 
     println!("example input: {:?}", example_input);
 
@@ -42,68 +41,93 @@ fn main() {
         // since the tail follows the head, the tail will always be one step behind the head
         // offset the tail by one step in the direction of the head
         println!("Direction: {}, Distance: {}", direction, distance);
-        let mut distance = distance.trim().parse::<usize>().unwrap();
-        if first_move {
-            // the head moves ahead first and this permanently offsets the tail and head by one step
-            match direction {
-                "D" => {
-                    head.0 += 1;
-                    grid[head.0][head.1] += 1; // the head "visits" the position
-                }
-                "U" => {
-                    head.0 -= 1;
-                    grid[head.0][head.1] += 1;
-                }
-                "R" => {
-                    head.1 += 1;
-                    grid[head.0][head.1] += 1;
-                }
-                "L" => {
-                    head.1 -= 1;
-                    grid[head.0][head.1] += 1;
-                }
-                _ => println!("Invalid direction"),
-            }
-            // then decrease the distance by one
-            distance -= 1;
-            first_move = false;
-        }
+        let mut distance = distance.trim().parse::<isize>().unwrap();
+        // if first_move {
+        //     // the head moves ahead first and this permanently offsets the tail and head by one step
+        //     match direction {
+        //         "D" => {
+        //             head.0 += 1;
+        //             grid[head.0][head.1] += 1; // the head "visits" the position
+        //         }
+        //         "U" => {
+        //             head.0 -= 1;
+        //             grid[head.0][head.1] += 1;
+        //         }
+        //         "R" => {
+        //             head.1 += 1;
+        //             grid[head.0][head.1] += 1;
+        //         }
+        //         "L" => {
+        //             head.1 -= 1;
+        //             grid[head.0][head.1] += 1;
+        //         }
+        //         _ => println!("Invalid direction"),
+        //     }
+        //     // then decrease the distance by one
+        //     distance -= 1;
+        //     first_move = false;
+        // }
+
         // now move the head and tail normally according to the input
         match direction {
             "D" => {
-                for _ in 0..distance {
-                    // move the head
+                for c in 0..distance {
                     head.0 += 1;
-                    grid[head.0][head.1] += 1; // the head "visits" the position
-                    // the tail "lags behind" the head
-                    tail.0 += 1;
+                    grid[head.0 as usize][head.1 as usize] += 1;
+
+                    // to simulate the tail following the head like a string
+                    // only start updating the tails location after the head has moved once
+                    // After each step, you'll need to update the position of the tail if the step means the head is no longer adjacent to the tail
+                    // Check if the head is two steps away from the tail in any direction
+        if (head.0 - tail.0).abs() == 2 || (head.1 - tail.1).abs() == 2 {
+            // Move the tail in the same direction as the head
+            tail = match direction {
+                "U" => (tail.0 - 1, tail.1),
+                "D" => (tail.0 + 1, tail.1),
+                "L" => (tail.0, tail.1 - 1),
+                "R" => (tail.0, tail.1 + 1),
+                _ => panic!("Invalid direction")
+            };
+        } else if (head.0 != tail.0) && (head.1 != tail.1) {
+            // Move the tail diagonally to keep up with the head
+            tail = (tail.0) + (head.0 - tail.0).signum(), (tail.1 + (head.1 - tail.1).signum());
                 }
             }
+        }
+
             "U" => {
-                for _ in 0..distance {
+                for c in 0..distance {
                     // move the head
                     head.0 -= 1;
-                    grid[head.0][head.1] += 1;
-                    // then move the tail
-                    tail.0 -= 1;
+                    grid[head.0 as usize][head.1 as usize] += 1;
+                    // only start updating the tails location after the head has moved once
+                    if c > 1 {
+                        tail.0 -= 1;
+                    }
                 }
             }
+
             "R" => {
-                for _ in 0..distance {
+                for c in 0..distance {
                     // move the head
                     head.1 += 1;
-                    grid[head.0][head.1] += 1;
-                    // then move the tail
-                    tail.1 += 1;
+                    grid[head.0 as usize][head.1 as usize] += 1;
+                    // only start updating the tails location after the head has moved once
+                    if c > 1 {
+                        tail.0 -= 1;
+                    }
                 }
             }
+
             "L" => {
-                for _ in 0..distance {
+                for c in 0..distance {
                     // move the head
                     head.1 -= 1;
-                    grid[head.0][head.1] += 1;
-                    // then move the tail
-                    tail.1 -= 1;
+                    grid[head.0 as usize][head.1 as usize] += 1;
+                    // only start updating the tails location after the head has moved once
+                    if c > 1 {
+                        tail.0 -= 1;
+                    }
                 }
             }
             _ => println!("Invalid direction"),
