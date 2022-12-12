@@ -26,7 +26,7 @@ fn main() {
 
     println!("example input: {:?}", example_input);
 
-    // split the ionput by \n
+    // split the input by \n
     let split_input: Vec<&str> = example_input.split("\n").collect();
     // to remove the empty string at the start of each line
     let split_input: Vec<&str> = split_input
@@ -36,40 +36,78 @@ fn main() {
     println!("split input: {:?}", split_input);
 
     // move the head and tail according to the input
+    let mut first_move = true;
     for line in split_input {
         let (direction, distance) = line.split_at(1);
+        // since the tail follows the head, the tail will always be one step behind the head
+        // offset the tail by one step in the direction of the head
         println!("Direction: {}, Distance: {}", direction, distance);
-        let distance = distance.trim().parse::<usize>().unwrap();
-        match direction {
-            "R" => {
-                for _ in 0..distance {
+        let mut distance = distance.trim().parse::<usize>().unwrap();
+        if first_move {
+            // the head moves ahead first and this permanently offsets the tail and head by one step
+            match direction {
+                "D" => {
                     head.0 += 1;
-                    grid[head.0][head.1] += 1;
+                    grid[head.0][head.1] += 1; // the head "visits" the position
                 }
-            }
-            "L" => {
-                for _ in 0..distance {
+                "U" => {
                     head.0 -= 1;
                     grid[head.0][head.1] += 1;
+                }
+                "R" => {
+                    head.1 += 1;
+                    grid[head.0][head.1] += 1;
+                }
+                "L" => {
+                    head.1 -= 1;
+                    grid[head.0][head.1] += 1;
+                }
+                _ => println!("Invalid direction"),
+            }
+            // then decrease the distance by one
+            distance -= 1;
+            first_move = false;
+        }
+        // now move the head and tail normally according to the input
+        match direction {
+            "D" => {
+                for _ in 0..distance {
+                    // move the head
+                    head.0 += 1;
+                    grid[head.0][head.1] += 1; // the head "visits" the position
+                    // the tail "lags behind" the head
+                    tail.0 += 1;
                 }
             }
             "U" => {
                 for _ in 0..distance {
-                    head.1 += 1;
+                    // move the head
+                    head.0 -= 1;
                     grid[head.0][head.1] += 1;
+                    // then move the tail
+                    tail.0 -= 1;
                 }
             }
-            "D" => {
+            "R" => {
                 for _ in 0..distance {
+                    // move the head
+                    head.1 += 1;
+                    grid[head.0][head.1] += 1;
+                    // then move the tail
+                    tail.1 += 1;
+                }
+            }
+            "L" => {
+                for _ in 0..distance {
+                    // move the head
                     head.1 -= 1;
                     grid[head.0][head.1] += 1;
+                    // then move the tail
+                    tail.1 -= 1;
                 }
             }
             _ => println!("Invalid direction"),
         }
-        // move the tail
-        grid[tail.0][tail.1] += 1;
-        tail = head;
 
         // print the grid
         for row in &grid {
