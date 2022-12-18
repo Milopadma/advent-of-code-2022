@@ -1,11 +1,13 @@
 fn main() {
-    let mut test_input = "noop
-addx 3
-addx -5".to_string();
+    let mut test_input = std::fs::read_to_string("test_input.test").unwrap();
 
-    println!("{}", test_input);
+    // println!("{}", test_input);
 
-    let mut program_output = iterate_program(&mut test_input);
+    let mut cycle_tuple = iterate_program(&mut test_input);
+    // println!("{:?}", cycle_tuple);
+
+    let mut signal_strength = find_for_signal_strength(&mut cycle_tuple, 20);
+    println!("{:?}", signal_strength);
 }
 
 fn iterate_program(test_input: &str) -> Vec<Vec<i32>> {
@@ -19,12 +21,10 @@ fn iterate_program(test_input: &str) -> Vec<Vec<i32>> {
 
     // for each line in the program vector
     for lines in program {
-        // the first section of the program is the instruction
-        let mut instruction = "";
-        let mut v_value = ""; // the second section of the program is the argument v value
-
         // split the line into instruction and argument
         let line = lines.split(" ").collect::<Vec<&str>>();
+        // println!("{:?}", line);
+        // the first section of the program is the instruction
         let instruction = line[0];
 
         match instruction {
@@ -33,50 +33,35 @@ fn iterate_program(test_input: &str) -> Vec<Vec<i32>> {
                 continue;
             }
             "addx" => {
-                v_value = line[1];
+                let v_value = line[1];
                 x_value += v_value.parse::<i32>().unwrap(); // does this accept negative values?
                 program_counter += 2;
             }
-            // "subx" => {
-            //     program_output -= argument.parse::<i32>().unwrap();
-            //     program_counter += 1;
-            // }
-            // "jmp" => {
-            //     program_counter += argument.parse::<i32>().unwrap();
-            // }
-            // "jmpz" => {
-            //     if program_output == 0 {
-            //         program_counter += argument.parse::<i32>().unwrap();
-            //     } else {
-            //         program_counter += 1;
-            //     }
-            // }
-            // "jmpn" => {
-            //     if program_output < 0 {
-            //         program_counter += argument.parse::<i32>().unwrap();
-            //     } else {
-            //         program_counter += 1;
-            //     }
-            // }
-            // "jmpp" => {
-            //     if program_output > 0 {
-            //         program_counter += argument.parse::<i32>().unwrap();
-            //     } else {
-            //         program_counter += 1;
-            //     }
-            // }
             "end" => {
                 break;
             }
             _ => println!("Invalid instruction"),
         }
-
-        println!("Instruction: {}, V value: {}", instruction, v_value);
-
         cycle_tuple.push(vec![program_counter, x_value]); // add the current cycle and x_value to the cycle_tuple
-        // print the current cycle and x_value
-        println!("Cycle: {}, X value: {}", program_counter, x_value + 1);
     }
     // return the cycle_tuple
     cycle_tuple
+}
+
+fn find_for_signal_strength(cycle_tuple: &Vec<Vec<i32>>, cycle_number: i32) -> Vec<Vec<i32>> {
+    // signal strength is the cycle number multiplied by the value of the X register
+    let mut signal_strength_tuple = vec![vec![0, 0]]; // to tell what the signal strength is at each cycle (cycle, signal_strength)
+    println!("{:?}", cycle_tuple);
+    // iterate through the cycle_tuple
+    for cycles in cycle_tuple {
+        let cycle = cycles[0];
+        let x_value = cycles[1];
+        // if the cycle is divisible by the cycle_number
+        if (cycle % cycle_number).eq(&0) {
+            let signal_strength = cycle * x_value;
+            signal_strength_tuple.push(vec![cycle, signal_strength]);
+        }
+    }
+
+    signal_strength_tuple
 }
