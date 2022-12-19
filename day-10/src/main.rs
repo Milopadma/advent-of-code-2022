@@ -1,5 +1,10 @@
 fn main() {
-    let mut test_input = std::fs::read_to_string("test_input.test").unwrap();
+    let mut test_input = std::fs::read_to_string("smaller.input").unwrap();
+    // let mut test_input = std::fs::read_to_string("test_input.test").unwrap();
+    // let mut test_input = std::fs::read_to_string("input.input").unwrap();
+
+    // 10460 too low
+    // 14320 too high
     // println!("{}", test_input);
 
     let mut cycle_tuple = iterate_program(&mut test_input);
@@ -13,7 +18,8 @@ fn main() {
 }
 
 fn iterate_program(test_input: &str) -> Vec<Vec<i32>> {
-    let mut cycle_tuple = vec![vec![0, 0]]; // to tell what the value of X is at each cycle (cycle, x_value)
+    // let mut cycle_tuple = vec![vec![0, 0]]; // to tell what the value of X is at each cycle (cycle, x_value)
+    let mut cycle_tuple = vec![]; // to tell what the value of X is at each cycle (cycle, x_value)
     let mut x_value = 1; // value of X
     // split the input into lines vector
     let program = test_input.split("\n").collect::<Vec<&str>>();
@@ -39,12 +45,15 @@ fn iterate_program(test_input: &str) -> Vec<Vec<i32>> {
                 // add the current cycle and x_value to the cycle_tuple before adding
                 program_counter += 1;
                 cycle_tuple.push(vec![program_counter, x_value]); // add the current cycle and x_value to the cycle_tuple
+
                 // now proceed with addition
                 let v_value = line[1];
                 x_value += v_value.parse::<i32>().unwrap(); // does this accept negative values?
                 program_counter += 1;
+
                 // then finally add again, essentially finishing in 2 cycles
                 cycle_tuple.push(vec![program_counter, x_value]);
+                continue;
             }
             "end" => {
                 break;
@@ -81,7 +90,6 @@ fn sum_six_signal_strengths(signal_strength: &Vec<Vec<i32>>) -> i32 {
         // only add to sum if its 20th, 60th, 100th, 140th, 180th and 220th cycle
         if check_list.contains(&entries[0]) {
             sum += entries[1];
-            println!("Sum: {}", sum);
             println!("Cycle: {}", entries[0]);
             println!("Signal Strength: {}", entries[1]);
         }
