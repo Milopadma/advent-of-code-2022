@@ -3,4 +3,5 @@
 *.o
 *.lock
 *.d
+*.ll
 /debug
